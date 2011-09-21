@@ -1,6 +1,5 @@
 import QtQuick 1.0
 import CustomComponents 1.0
-import "logic.js" as Logic
 
 Rectangle {
     id: main
@@ -8,11 +7,14 @@ Rectangle {
     height: 600
 
     Canvas { id: canvas }
-    ThumbChooser { id: thumbnails }
+    ThumbChooser { id: thumbnails; opacity: 0 }
     Toolbox { id: toolbox }
 
     Component.onCompleted: {
-        document.changed.connect(function(rect) {canvas.source = "image://document/"});
+        document.changed.connect(function(rect) {
+                                     canvas.source = "image://document/" + Math.random()
+                                     console.log(canvas.source);
+                                 });
         document.load("qml/cmceye/example.jpg");
     }
 

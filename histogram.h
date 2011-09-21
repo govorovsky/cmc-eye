@@ -8,23 +8,14 @@
 class Histogram : public QDeclarativeItem
 {
     Q_OBJECT
-    Q_ENUMS(Channel)
     Q_PROPERTY(QObject* target READ document WRITE setDocument)
-    Q_PROPERTY(Channel channel READ channel WRITE setChannel NOTIFY channelChanged)
+    Q_PROPERTY(QString channel READ channel WRITE setChannel NOTIFY channelChanged)
 public:
-    enum Channel {
-        Channel_VALUE,
-        Channel_RED,
-        Channel_GREEN,
-        Channel_BLUE,
-        Channel_ALL
-    };
-
     QObject* document() const;
     void setDocument(QObject* document);
 
-    Channel channel() const;
-    void setChannel(Channel channel);
+    QString channel() const;
+    void setChannel(const QString& channel);
 
     explicit Histogram(QDeclarativeItem *parent = 0);
     virtual ~Histogram();
@@ -35,8 +26,8 @@ signals:
 
 private:
     Document* m_doc;
-    Channel m_ch;
-    uint m_freq[Channel_ALL][256];
+    char m_ch;
+    uint m_freq[4][256];
 
     Q_DISABLE_COPY(Histogram)
 private slots:

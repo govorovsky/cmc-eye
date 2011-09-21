@@ -16,6 +16,18 @@ Rectangle {
     color: "transparent"
     smooth: true
 
+    function channelIconColor(channel) {
+        if (channel == "value")
+            return "gray";
+        return channel;
+    }
+
+    function channelMaxColor(channel) {
+        if (channel == "value")
+            return "white";
+        return channel;
+    }
+
     Column {
         id: column
 
@@ -31,12 +43,6 @@ Rectangle {
             id: row
             spacing: 5
 
-            property variant iconColor: ["gray", "red", "green", "blue"]
-            property variant channel: [Histogram.Channel_VALUE,
-                                       Histogram.Channel_RED,
-                                       Histogram.Channel_GREEN,
-                                       Histogram.Channel_BLUE]
-
             Text {
                 id: label
                 text: "Channel: "
@@ -46,7 +52,7 @@ Rectangle {
 
             Repeater {
                 id: repeater
-                model: 4
+                model: ["value", "red", "green", "blue"]
                 Rectangle {
                     parent: row
 
@@ -54,7 +60,7 @@ Rectangle {
                     width: 10
                     height: 10
 
-                    color: row.iconColor[index]
+                    color: channelIconColor(modelData)
 
                     Rectangle {
                         id: selection
@@ -71,7 +77,7 @@ Rectangle {
                         id: channelTrap
                         anchors.fill: selection
                         hoverEnabled: true
-                        onClicked: histogram.channel = row.channel[index]
+                        onClicked: histogram.channel = modelData
                     }
                 }
             }
@@ -80,20 +86,11 @@ Rectangle {
         Histogram {
             id: histogram
 
-            function maxColor() {
-                switch (channel) {
-                    case Histogram.Channel_VALUE: return "white";
-                    case Histogram.Channel_RED: return "red";
-                    case Histogram.Channel_GREEN: return "green";
-                    case Histogram.Channel_BLUE: return "blue";
-                }
-            }
-
             opacity: 1.0
             target: document
             width: parent.width
             height: 100
-            channel: Histogram.Channel_VALUE
+            channel: "value"
         }
 
         Text {
@@ -117,7 +114,7 @@ Rectangle {
                 rotation: 90
                 gradient: Gradient {
                     GradientStop { id: endColor; position: 1.0; color: "black" }
-                    GradientStop { id: startColor; position: 0.0; color: histogram.maxColor() }
+                    GradientStop { id: startColor; position: 0.0; color: channelMaxColor(histogram.channel) }
                 }
             }
 
@@ -205,6 +202,7 @@ Rectangle {
                     right: parent.right
                 }
                 label: "Apply"
+                onClicked: document.linearCorrection(levelLow.value, levelHigh.value, histogram.channel)
             }
         }
     }
