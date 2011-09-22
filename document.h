@@ -12,8 +12,16 @@ class Document : public QObject
     Q_PROPERTY(bool modified READ modified() NOTIFY modifiedChanged())
 public:
     struct PixelMapper {
-        virtual QRgb map(QRgb pixel) const = 0;
-        inline QRgb operator()(QRgb pixel) const { return map(pixel); }
+        virtual QRgb map(QRgb pixel, QPoint point) const = 0;
+        inline QRgb operator()(QRgb pixel, QPoint point) const { return map(pixel, point); }
+    };
+
+    struct PixelTranslator {
+        /*  Returns coordinates on original image
+         *  from the resulting image coordinates
+         */
+        virtual QPointF translate(QPoint point) const = 0;
+        inline QPointF operator()(QPoint point) const { return translate(point); }
     };
 
     explicit Document(QObject *parent = 0);
@@ -28,8 +36,11 @@ public:
 
     Q_INVOKABLE bool save(const QString& filename);
     Q_INVOKABLE void adjustContrast(uchar low, uchar high, QString channel);
+    Q_INVOKABLE void rotate(int x, int y, qreal angle);
+    Q_INVOKABLE void waveEffect();
 
-    void mapPixels(const PixelMapper& func);
+    void concurrentMap(const PixelMapper& func);
+    void translatePixels(const PixelTranslator& func);
     QImage getImage() const { return m_image; }
 signals:
     void repaint(QRect region);
