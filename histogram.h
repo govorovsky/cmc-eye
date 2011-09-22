@@ -17,8 +17,8 @@ public:
     QString channel() const;
     void setChannel(const QString& channel);
 
-    Q_INVOKABLE uchar getLow() const;
-    Q_INVOKABLE uchar getHigh() const;
+    Q_INVOKABLE uchar getLow(const QString& channel = QString()) const;
+    Q_INVOKABLE uchar getHigh(const QString& channel = QString()) const;
 
     explicit Histogram(QDeclarativeItem *parent = 0);
     virtual ~Histogram();

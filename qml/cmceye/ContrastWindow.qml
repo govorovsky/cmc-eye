@@ -1,5 +1,6 @@
 import QtQuick 1.0
 import CustomComponents 1.0
+import "functions.js" as Helper
 
 Rectangle {
     id: window
@@ -16,24 +17,12 @@ Rectangle {
     color: "transparent"
     smooth: true
 
-    function channelIconColor(channel) {
-        if (channel == "value")
-            return "gray";
-        return channel;
-    }
-
-    function channelMaxColor(channel) {
-        if (channel == "value")
-            return "white";
-        return channel;
-    }
-
-    function autoLevels() {
+    function autoLowHigh() {
         levelLow.value = histogram.getLow()
         levelHigh.value = histogram.getHigh()
     }
 
-    Component.onCompleted: autoLevels();
+    Component.onCompleted: autoLowHigh();
 
     Column {
         id: column
@@ -45,6 +34,15 @@ Rectangle {
             margins: 5
         }
         spacing: 5
+
+        PushButton {
+            label: "Autolevels"
+            anchors {
+                left: parent.left
+                right: parent.right
+            }
+            onClicked: Helper.autoLevels(histogram);
+        }
 
         Row {
             id: row
@@ -67,7 +65,7 @@ Rectangle {
                     width: 10
                     height: 10
 
-                    color: channelIconColor(modelData)
+                    color: Helper.channelIconColor(modelData)
 
                     Rectangle {
                         id: selection
@@ -86,7 +84,7 @@ Rectangle {
                         hoverEnabled: true
                         onClicked: {
                             histogram.channel = modelData
-                            autoLevels();
+                            autoLowHigh();
                         }
                     }
                 }
@@ -124,7 +122,10 @@ Rectangle {
                 rotation: 90
                 gradient: Gradient {
                     GradientStop { id: endColor; position: 1.0; color: "black" }
-                    GradientStop { id: startColor; position: 0.0; color: channelMaxColor(histogram.channel) }
+                    GradientStop {
+                        id: startColor; position: 0.0;
+                        color: Helper.channelMaxColor(histogram.channel)
+                    }
                 }
             }
 

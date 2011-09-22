@@ -16,14 +16,29 @@ Histogram::Histogram(QDeclarativeItem *parent) :
 
 Histogram::~Histogram() { }
 
-uchar Histogram::getLow() const
+static int parseChannel(const QString& channel)
 {
-    return m_low[m_ch];
+    if (channel == "value")
+        return 0;
+    if (channel == "red")
+        return 1;
+    if (channel == "green")
+        return 2;
+    if (channel == "blue")
+        return 3;
+    return -1;
 }
 
-uchar Histogram::getHigh() const
+uchar Histogram::getLow(const QString& channel) const
 {
-    return m_high[m_ch];
+    int ch = parseChannel(channel);
+    return m_low[(ch == -1) ? m_ch : ch];
+}
+
+uchar Histogram::getHigh(const QString& channel) const
+{
+    int ch = parseChannel(channel);
+    return m_high[(ch == -1) ? m_ch : ch];
 }
 
 QObject* Histogram::document() const
@@ -55,17 +70,9 @@ QString Histogram::channel() const
 
 void Histogram::setChannel(const QString& channel)
 {
-    int ch_id = -1;
-    if (channel == "value")
-        ch_id = 0;
-    else if (channel == "red")
-        ch_id = 1;
-    else if (channel == "green")
-        ch_id = 2;
-    else if (channel == "blue")
-        ch_id = 3;
+    int ch_id;
 
-    if (ch_id != -1) {
+    if (-1 != (ch_id = parseChannel(channel))) {
         m_ch = ch_id;
         emit channelChanged();
         update(boundingRect());
