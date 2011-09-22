@@ -1,5 +1,5 @@
 import QtQuick 1.0
-import CustomComponents 1.0
+import "functions.js" as Helper
 
 Rectangle {
     id: main
@@ -11,16 +11,23 @@ Rectangle {
     Toolbox { id: toolbox }
 
     Component.onCompleted: {
-        document.changed.connect(function(rect) {
-                                     canvas.source = "image://document/" + Math.random()
-                                     console.log(canvas.source);
-                                 });
-        document.load("qml/cmceye/example.jpg");
+        Helper.loadFromFile(main);
+    }
+
+    Connections {
+        target: document
+        onRepaint: { canvas.source = "image://document/" + Math.random() }
     }
 
     Binding {
-        target: document
-        property: "selection"
-        value: canvas.selection
+        target: viewer
+        property: "windowFilePath"
+        value: document.source
+    }
+
+    Binding {
+        target: viewer
+        property: "windowModified"
+        value: document.modified
     }
 }

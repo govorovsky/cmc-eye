@@ -213,7 +213,7 @@ Rectangle {
                     right: parent.right
                 }
                 label: "Apply"
-                onClicked: document.linearCorrection(levelLow.value, levelHigh.value, histogram.channel)
+                onClicked: document.adjustContrast(levelLow.value, levelHigh.value, histogram.channel)
             }
         }
     }

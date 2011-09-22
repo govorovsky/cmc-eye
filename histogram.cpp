@@ -38,7 +38,7 @@ void Histogram::setDocument(QObject *document)
     }
     m_doc = qobject_cast<Document*> (document);
     connect(m_doc, SIGNAL(selectionChanged()), SLOT(updateFrequencies()));
-    connect(m_doc, SIGNAL(changed(QRect)), SLOT(updateFrequencies()));
+    connect(m_doc, SIGNAL(repaint(QRect)), SLOT(updateFrequencies()));
     emit updateFrequencies();
 }
 

@@ -3,38 +3,52 @@
 #include <QtCore>
 #include <QColor>
 
-Document::Document()
+Document::Document(QObject *parent)
+    : QObject(parent), m_image(), m_source(), m_modified(false), m_selection(-1, -1, -1, -1)
 {
 }
 
-QImage Document::getImage() const
+void Document::setModified(bool modified)
 {
-    return m_image;
+    if (m_modified != modified) {
+        m_modified = modified;
+        emit modifiedChanged();
+    }
 }
 
-bool Document::load(const QString& filename)
+void Document::setSource(const QString& filename)
 {
     if (!m_image.load(filename))
-        return false;
+        return;
 
     setSelection(m_image.rect());
-    emit changed(m_selection);
-    return true;
+    setModified(false);
+
+    m_source = filename;
+    emit sourceChanged();
+
+    emit repaint(m_image.rect());
 }
 
-bool Document::save(const QString& filename) const
+bool Document::save(const QString& filename)
 {
-    return m_image.save(filename);
-}
+    if (m_image.save(filename)) {
+        if (m_source != filename) {
+            m_source = filename;
+            emit sourceChanged();
+        }
 
-QRect Document::selection() const
-{
-    return m_selection;
+        setModified(false);
+        return true;
+    }
+    return false;
 }
 
 void Document::setSelection(QRect selection)
 {
-    m_selection = selection.isValid() ? selection : m_image.rect();
+    m_selection = selection.isValid() ?
+                selection.intersected(m_image.rect()) :
+                m_image.rect();
     emit selectionChanged();
 }
 
@@ -123,7 +137,7 @@ struct ValueCorrector: Document::PixelMapper {
     }
 };
 
-void Document::linearCorrection(uchar low, uchar high, QString channel)
+void Document::adjustContrast(uchar low, uchar high, QString channel)
 {
     qDebug() << "LinearCorrection(" << low << "," << high << "," << channel << ")";
 
@@ -139,5 +153,7 @@ void Document::linearCorrection(uchar low, uchar high, QString channel)
         qCritical() << "Unknown channel name" << channel;
         return;
     }
-    emit changed(m_selection);
+
+    setModified(true);
+    emit repaint(m_selection);
 }
