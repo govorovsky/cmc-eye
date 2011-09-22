@@ -8,7 +8,7 @@ Item {
     property bool active: false // useless in stateless mode
     property bool pressed: stateless ? trap.pressed : active
     property alias description: bubble.text
-    signal clicked()
+    signal clicked(variant mouse)
 
     width: parent.width
     height: width
@@ -17,10 +17,10 @@ Item {
         id: trap
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.LeftButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
             active ^= true
-            button.clicked()
+            button.clicked(mouse)
         }
     }
 

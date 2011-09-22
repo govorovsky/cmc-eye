@@ -11,6 +11,27 @@ function loadFromFile(context) {
     document.source = file
 }
 
+function saveDocument() {
+    console.debug("saveDocument()");
+    if (!document.save(document.source)) {
+        console.log("Can't save to " + document.source);
+        return false;
+    }
+    return true;
+}
+
+function saveAsDocument() {
+    console.debug("saveAsDocument()");
+    var file = util.saveFileDialog("Save as...", ".", imageFilter);
+    if (file === "")
+        return false;
+    if (!document.save(file)) {
+        console.log("Can't save to " + document.source);
+        return false;
+    }
+    return true;
+}
+
 function channelIconColor(channel) {
     if (channel == "value")
         return "gray";

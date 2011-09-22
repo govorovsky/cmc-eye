@@ -1,4 +1,5 @@
 import QtQuick 1.0
+import "functions.js" as Helper
 
 Flipable {
     id: toolbox
@@ -37,19 +38,14 @@ Flipable {
             }
 
             ToolButton {
-                id: contrast
                 description: "Adjust contrast"
                 background: "panel/contrast.png"
                 onClicked: flipTo("ContrastWindow")
             }
 
             ToolButton {
-                id: blur
                 description: "Blur"
                 background: "panel/blur.svg"
-                onClicked: {
-                    document.inverse(document.revision)
-                }
             }
         }
 
@@ -62,18 +58,22 @@ Flipable {
             }
 
             ToolButton {
-                id: open
                 description: "Save changes"
                 background: "panel/document-open.svg"
                 onClicked: {
-                    document.save("out.jpg", 2);
+                    console.debug("tool clicked " + mouse.button)
+                    if (mouse.button == Qt.RightButton) {
+                        Helper.saveAsDocument()
+                    } else if (mouse.button == Qt.LeftButton) {
+                        Helper.saveDocument()
+                    }
                 }
             }
 
             ToolButton {
-                id: save
-                description: "Load image or directory"
+                description: "Load image"
                 background: "panel/document-save.svg"
+                onClicked: Helper.loadFromFile()
             }
         }
     }
