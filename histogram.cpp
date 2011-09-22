@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstring>
 
+const double AUTOLEVELS_ZERO = 0.02;
+
 Histogram::Histogram(QDeclarativeItem *parent) :
     QDeclarativeItem(parent), m_doc(0), m_ch(0)
 {
@@ -12,8 +14,16 @@ Histogram::Histogram(QDeclarativeItem *parent) :
     memset(m_freq, 0, sizeof(m_freq));
 }
 
-Histogram::~Histogram()
+Histogram::~Histogram() { }
+
+uchar Histogram::getLow() const
 {
+    return m_low[m_ch];
+}
+
+uchar Histogram::getHigh() const
+{
+    return m_high[m_ch];
 }
 
 QObject* Histogram::document() const
@@ -82,6 +92,20 @@ void Histogram::updateFrequencies()
         }
     }
 
+    for (uchar ch = 0; ch < NCHANNELS; ++ch) {
+        m_max[ch] = *std::max_element(m_freq[ch], m_freq[ch] + NCOLORS);
+        uchar low = 0, high = NCOLORS - 1;
+        uint zero_level = (uint) m_max[ch] * AUTOLEVELS_ZERO;
+
+        while (low < high && m_freq[ch][low] <= zero_level)
+            ++low;
+        while (low < high && m_freq[ch][high] <= zero_level)
+            --high;
+
+        m_low[ch] = low;
+        m_high[ch] = high;
+    }
+
     update(boundingRect());
 }
 
@@ -90,20 +114,19 @@ void Histogram::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
     if (!m_doc)
         return;
 
-    const int ncolors = 256;
     const int x = boundingRect().left();
     const int y = boundingRect().top();
     const int width = boundingRect().width();
     const int height = boundingRect().height();
     painter->fillRect(boundingRect(), QBrush(Qt::white, Qt::SolidPattern));
 
-    uint* freq = m_freq[(int)m_ch];
-    uint max_freq = *std::max_element(freq, freq+ncolors);
+    uint* freq = m_freq[m_ch];
+    uint max_freq = m_max[m_ch];
     if (max_freq == 0)
         return;
 
-    double w = (width + .0) / ncolors;
-    for (int i = 0; i < ncolors; ++i) {
+    double w = (width + .0) / NCOLORS;
+    for (int i = 0; i < NCOLORS; ++i) {
         painter->fillRect((int) x + std::ceil(w * i), y + height,
                           (int) x + std::ceil(w), y + -height * (freq[i] + 0.0) / max_freq,
                           Qt::SolidPattern);

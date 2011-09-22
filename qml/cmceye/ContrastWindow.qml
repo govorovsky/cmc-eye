@@ -28,6 +28,13 @@ Rectangle {
         return channel;
     }
 
+    function autoLevels() {
+        levelLow.value = histogram.getLow()
+        levelHigh.value = histogram.getHigh()
+    }
+
+    Component.onCompleted: autoLevels();
+
     Column {
         id: column
 
@@ -77,7 +84,10 @@ Rectangle {
                         id: channelTrap
                         anchors.fill: selection
                         hoverEnabled: true
-                        onClicked: histogram.channel = modelData
+                        onClicked: {
+                            histogram.channel = modelData
+                            autoLevels();
+                        }
                     }
                 }
             }
@@ -164,6 +174,7 @@ Rectangle {
                 id: buttonAuto
                 anchors.horizontalCenter: parent.horizontalCenter
                 label: "Auto"
+                onClicked: autoLevels();
             }
 
             ByteInput {
