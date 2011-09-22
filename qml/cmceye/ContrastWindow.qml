@@ -175,7 +175,7 @@ Rectangle {
                 id: buttonAuto
                 anchors.horizontalCenter: parent.horizontalCenter
                 label: "Auto"
-                onClicked: autoLevels();
+                onClicked: autoLowHigh()
             }
 
             ByteInput {
