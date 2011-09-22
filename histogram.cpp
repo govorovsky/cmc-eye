@@ -133,9 +133,12 @@ void Histogram::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
         return;
 
     double w = (width + .0) / NCOLORS;
+    QPainterPath path;
+
     for (int i = 0; i < NCOLORS; ++i) {
-        painter->fillRect((int) x + std::ceil(w * i), y + height,
-                          (int) x + std::ceil(w), y + -height * (freq[i] + 0.0) / max_freq,
-                          Qt::SolidPattern);
+        path.addRect((int) x + (w * i), y + height,
+                     (int) x + w, y + -height * (freq[i] + 0.0) / max_freq);
     }
+
+    painter->fillPath(path, QBrush(Qt::SolidPattern));
 }
