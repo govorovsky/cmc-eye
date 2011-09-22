@@ -1,12 +1,8 @@
 import QtQuick 1.1 // required for 'preventStealing'
 
 Flickable {
-    id: canvas
-
     property alias source: image.source
-    property variant selection: selection.active ?
-                                    Qt.rect(selection.x, selection.y, selection.width, selection.height)
-                                  : Qt.rect(-1, -1, -1, -1)
+    id: canvas
 
     anchors.fill: parent
     clip: true
@@ -20,23 +16,30 @@ Flickable {
         cache: false
     }
 
+    Binding {
+        target: document
+        property: "selection"
+        when: selection.visible
+        value: Qt.rect(selection.x, selection.y,
+                       selection.width, selection.height)
+    }
+
     Rectangle {
         id: selection
-
-        property bool active: (Math.max(width, height) > 10)
 
         border.width: 2
         border.color: "white"
         color: "transparent"
 
-        x: Math.min(selectionTrap.startX, selectionTrap.mouseX)
-        y: Math.min(selectionTrap.startY, selectionTrap.mouseY)
-        width: Math.abs(selectionTrap.startX - selectionTrap.mouseX)
-        height: Math.abs(selectionTrap.startY - selectionTrap.mouseY)
+        visible: Math.max(width, height) > 10
+        x: Math.min(trap.startX, trap.mouseX)
+        y: Math.min(trap.startY, trap.mouseY)
+        width: Math.abs(trap.startX - trap.mouseX)
+        height: Math.abs(trap.startY - trap.mouseY)
     }
 
     MouseArea {
-        id: selectionTrap
+        id: trap
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
         preventStealing: true
@@ -55,7 +58,7 @@ Flickable {
         Rectangle {
             color: "black"
             opacity: 0.7
-            visible: selection.active
+            visible: selection.visible
         }
     }
 
