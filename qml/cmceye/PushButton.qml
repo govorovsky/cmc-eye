@@ -12,22 +12,20 @@ Item {
     implicitHeight: label.height + verticalMargin * 2
 
     Rectangle {
+        id: shadow
+        color: "black"
+        anchors.fill: rect
+        anchors.rightMargin: -1
+        anchors.bottomMargin: -1
+        radius: rect.radius
+    }
+
+    Rectangle {
         id: rect
         anchors.fill: parent
 
         color: "gray"
         radius: 5
-        opacity: 1.0
-
-        Rectangle {
-            id: shadow
-            color: "black"
-            anchors.fill: parent
-            anchors.rightMargin: 1
-            anchors.bottomMargin: 1
-            radius: parent.radius
-            z: -1
-        }
 
         MouseArea {
             id: trap
@@ -35,25 +33,24 @@ Item {
             acceptedButtons: Qt.LeftButton
             onClicked: button.clicked()
         }
+    }
 
-        transform: Translate { id: translation; x: 0; y: 0 }
+    transform: Translate { id: translation; x: 0; y: 0 }
 
-        states: State {
-            name: "pressed"
-            when: trap.pressed
-            PropertyChanges {
-                target: translation
-                x: 3; y: 3
-            }
-        }
-
-        Label {
-            id: label
-            anchors {
-                horizontalCenter: rect.horizontalCenter
-                verticalCenter: rect.verticalCenter
-            }
+    states: State {
+        name: "pressed"
+        when: trap.pressed
+        PropertyChanges {
+            target: translation
+            x: 3; y: 3
         }
     }
 
+    Label {
+        id: label
+        anchors {
+            horizontalCenter: rect.horizontalCenter
+            verticalCenter: rect.verticalCenter
+        }
+    }
 }
