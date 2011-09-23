@@ -36,7 +36,7 @@ public:
 
     Q_INVOKABLE bool save(const QString& filename);
     Q_INVOKABLE void adjustContrast(uchar low, uchar high, QString channel);
-    Q_INVOKABLE void rotate(qreal x, qreal y, qreal angle);
+    Q_INVOKABLE void transform(qreal x, qreal y, qreal angle, qreal scale = 1.0);
     Q_INVOKABLE void waveEffect();
 
     void concurrentMap(const PixelMapper& func);

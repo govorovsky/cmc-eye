@@ -228,6 +228,7 @@ struct WaveEffect: Document::PixelTranslator {
 
 void Document::waveEffect()
 {
+    qDebug() << "waveEffect()";
     translatePixels(WaveEffect());
 }
 
@@ -235,19 +236,20 @@ void Document::waveEffect()
 struct Rotation: Document::PixelTranslator {
     const qreal x0, y0;
     const qreal cos_mu, sin_mu;
+    const qreal factor;
 
-    Rotation(qreal x, qreal y, qreal angle)
-        : x0(x), y0(y), cos_mu(cos(angle)), sin_mu(sin(angle)) { }
+    Rotation(qreal x, qreal y, qreal angle, qreal scale)
+        : x0(x), y0(y), cos_mu(cos(angle)), sin_mu(sin(angle)), factor(1 / scale) { }
 
     QPointF translate(QPoint point) const {
-        return QPointF((point.x() - x0) * cos_mu - (point.y() - y0) * sin_mu + x0,
-                       (point.x() - x0) * sin_mu + (point.y() - y0) * cos_mu + y0);
+        return QPointF(factor * ((point.x() - x0) * cos_mu - (point.y() - y0) * sin_mu) + x0,
+                       factor * ((point.x() - x0) * sin_mu + (point.y() - y0) * cos_mu) + y0);
     }
 };
 
 
-void Document::rotate(qreal x, qreal y, qreal angle)
+void Document::transform(qreal x, qreal y, qreal angle, qreal scale)
 {
-    qDebug() << "rotate(" << x << "," << y << "," << angle << ")";
-    translatePixels(Rotation(x, y, angle));
+    qDebug() << "transform(" << x << "," << y << "," << angle << "," << scale << ")";
+    translatePixels(Rotation(x, y, angle, scale));
 }

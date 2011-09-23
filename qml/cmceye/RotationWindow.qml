@@ -1,10 +1,16 @@
 import QtQuick 1.1
 
 Column {
-    width: childrenRect.width
     anchors.left: parent ? parent.left : undefined
     anchors.leftMargin: 5
     spacing: 5
+
+    Label {
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.family: "Helvetica"
+        font.bold: true
+        text: "Scale & Rotate"
+    }
 
     Row {
         spacing: 5
@@ -37,7 +43,7 @@ Column {
         Label {
             id: labelOrigin
             anchors.verticalCenter: parent.verticalCenter
-            text: "Origin offset: ( "
+            text: "Origin offset: ("
         }
 
         Input {
@@ -57,7 +63,7 @@ Column {
 
         Label {
             anchors.verticalCenter: parent.verticalCenter
-            text: " , "
+            text: ","
         }
 
         Input {
@@ -80,12 +86,38 @@ Column {
         }
     }
 
+    Row {
+        spacing: 5
+
+        Label {
+            id: labelScale
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Scale factor: "
+        }
+
+        Input {
+            id: factor
+
+            anchors.verticalCenter: parent.verticalCenter
+            width: 40
+            height: labelAngle.height + 4
+
+            input {
+                maximumLength: 5
+                text: "1"
+                validator: DoubleValidator { bottom: 0 }
+            }
+        }
+
+    }
+
     WindowButtons {
         onLeftClicked: toolbox.openHome()
-        rightLabel: "Rotate"
+        rightLabel: "Transform"
         onRightClicked:
-            document.rotate(originX.input.text, originY.input.text,
-                            Math.PI / 180.0 * angle.input.text)
+            document.transform(originX.input.text, originY.input.text,
+                               Math.PI / 180.0 * angle.input.text,
+                               factor.input.text)
     }
 
     Rectangle {

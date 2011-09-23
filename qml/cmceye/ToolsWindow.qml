@@ -12,13 +12,13 @@ Column {
     }
 
     ToolButton {
-        description: "Wave"
+        description: "Wave effect"
         background: "panel/blur.svg"
         onClicked: document.waveEffect()
     }
 
     ToolButton {
-        description: "Rotate"
+        description: "Scale & Rotate"
         background: "panel/rotate.svg"
         onClicked: toolbox.openWindow("Rotation")
     }
