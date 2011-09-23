@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.showExpanded();
-    viewer.setMainQmlFile(QLatin1String("qml/cmceye/Main.qml"));
+    viewer.setMainQmlFile(QLatin1String("qml/Main.qml"));
 
     return app.exec();
 }

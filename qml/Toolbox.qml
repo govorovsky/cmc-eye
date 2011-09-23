@@ -28,7 +28,7 @@ Flipable {
             bottom: 10
             right: 12
         }
-        source: "panel/toolbox-bg.png"
+        source: "img/toolbox-bg.png"
         smooth: true
     }
 

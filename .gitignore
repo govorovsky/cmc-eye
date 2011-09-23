@@ -3,3 +3,4 @@ src/Makefile
 bin
 src/*.o
 src/moc_*
+*.pro.user

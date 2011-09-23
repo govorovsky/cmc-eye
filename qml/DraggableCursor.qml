@@ -19,8 +19,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         x: 0
         source: (trap.containsMouse || trap.drag.active) ?
-                    "marker-selected.svg"
-                  : "marker.svg"
+                    "img/marker-selected.svg"
+                  : "img/marker.svg"
 
         MouseArea {
             id: trap

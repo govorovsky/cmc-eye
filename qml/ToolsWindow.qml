@@ -7,25 +7,25 @@ Column {
 
     ToolButton {
         description: "Adjust contrast"
-        background: "panel/contrast.png"
+        background: "img/contrast.png"
         onClicked: toolbox.openWindow("Contrast")
     }
 
     ToolButton {
         description: "Wave effect"
-        background: "panel/blur.svg"
+        background: "img/blur.svg"
         onClicked: document.waveEffect()
     }
 
     ToolButton {
         description: "Scale & Rotate"
-        background: "panel/rotate.svg"
+        background: "img/rotate.svg"
         onClicked: toolbox.openWindow("Rotation")
     }
 
     ToolButton {
         description: "Save changes"
-        background: "panel/document-save.svg"
+        background: "img/document-save.svg"
         onClicked: {
             if (mouse.button == Qt.RightButton) {
                 Helper.saveAsDocument()
@@ -37,7 +37,7 @@ Column {
 
     ToolButton {
         description: "Load image"
-        background: "panel/document-open.svg"
+        background: "img/document-open.svg"
         onClicked: Helper.loadFromFile()
     }
 }
