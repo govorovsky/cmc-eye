@@ -34,8 +34,10 @@ Flickable {
         visible: Math.max(width, height) > 10
         x: Math.min(trap.startX, trap.mouseX)
         y: Math.min(trap.startY, trap.mouseY)
-        width: Math.abs(trap.startX - trap.mouseX)
-        height: Math.abs(trap.startY - trap.mouseY)
+        width: Math.min(Math.abs(trap.startX - trap.mouseX),
+                        parent.width - x)
+        height: Math.min(Math.abs(trap.startY - trap.mouseY),
+                         parent.height - y)
     }
 
     MouseArea {
