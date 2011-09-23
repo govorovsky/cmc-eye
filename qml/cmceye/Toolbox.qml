@@ -44,6 +44,10 @@ Flipable {
         window.source = name + "Window.qml"
     }
 
+    function openHome() {
+        openWindow("Tools")
+    }
+
     Loader {
         id: window
         anchors.verticalCenter: parent.verticalCenter

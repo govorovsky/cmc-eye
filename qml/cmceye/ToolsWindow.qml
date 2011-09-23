@@ -20,9 +20,7 @@ Column {
     ToolButton {
         description: "Rotate"
         background: "panel/rotate.svg"
-        onClicked: document.rotate(document.selection.x + document.selection.width / 2,
-                                   document.selection.y + document.selection.height / 2,
-                                   3.14 / 180.0 * 30.0)
+        onClicked: toolbox.openWindow("Rotation")
     }
 
     ToolButton {

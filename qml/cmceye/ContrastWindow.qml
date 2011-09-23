@@ -165,31 +165,9 @@ Column {
         }
     }
 
-    Item {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: childrenRect.height
-
-        PushButton {
-            id: buttonCancel
-            anchors {
-                rightMargin: 5
-                right: parent.horizontalCenter
-                left: parent.left
-            }
-            label: "Cancel"
-            onClicked: toolbox.openWindow("Tools")
-        }
-
-        PushButton {
-            id: buttonApply
-            anchors {
-                left: parent.horizontalCenter
-                leftMargin: 5
-                right: parent.right
-            }
-            label: "Apply"
-            onClicked: document.adjustContrast(levelLow.value, levelHigh.value, histogram.channel)
-        }
+    WindowButtons {
+        onLeftClicked: toolbox.openHome()
+        rightLabel: "Stretch"
+        onRightClicked: document.adjustContrast(levelLow.value, levelHigh.value, histogram.channel)
     }
 }
