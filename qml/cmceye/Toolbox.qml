@@ -10,11 +10,11 @@ Flipable {
         verticalCenter: parent.verticalCenter
     }
 
-    width: window.width
+    width: window.childrenRect.width + window.childrenRect.x
     height: window.height
 
     BorderImage {
-        opacity: 0.6
+        opacity: 0.7
         anchors {
             fill: parent
             leftMargin: -2

@@ -233,10 +233,10 @@ void Document::waveEffect()
 
 
 struct Rotation: Document::PixelTranslator {
-    const int x0, y0;
+    const qreal x0, y0;
     const qreal cos_mu, sin_mu;
 
-    Rotation(int x, int y, qreal angle)
+    Rotation(qreal x, qreal y, qreal angle)
         : x0(x), y0(y), cos_mu(cos(angle)), sin_mu(sin(angle)) { }
 
     QPointF translate(QPoint point) const {
@@ -246,7 +246,8 @@ struct Rotation: Document::PixelTranslator {
 };
 
 
-void Document::rotate(int x, int y, qreal angle)
+void Document::rotate(qreal x, qreal y, qreal angle)
 {
+    qDebug() << "rotate(" << x << "," << y << "," << angle << ")";
     translatePixels(Rotation(x, y, angle));
 }
