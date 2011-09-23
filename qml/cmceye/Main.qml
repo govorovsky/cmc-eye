@@ -7,7 +7,6 @@ Rectangle {
     height: 600
 
     Canvas { id: canvas }
-    ThumbChooser { id: thumbnails; opacity: 0 }
     Toolbox { id: toolbox }
 
     Component.onCompleted: {
