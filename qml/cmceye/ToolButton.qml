@@ -10,7 +10,7 @@ Item {
     property alias description: bubble.text
     signal clicked(variant mouse)
 
-    width: parent.width
+    width: background.width
     height: width
 
     MouseArea {
@@ -96,7 +96,8 @@ Item {
 
     Image {
         id: background
-        anchors.fill: parent
+        sourceSize.width: 30
+        sourceSize.height: 30
         smooth: true
         opacity: 0.6
     }

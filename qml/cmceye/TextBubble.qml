@@ -4,7 +4,7 @@ Item {
     id: bubble
 
     property alias text: descriptionText.text
-    property color color: "black"
+    property color color: "#333333"
 
     Rectangle {
         id: arrow
@@ -49,7 +49,7 @@ Item {
         radius: 10
     }
 
-    Text {
+    Label {
         id: descriptionText
 
         anchors {
@@ -60,9 +60,6 @@ Item {
 
         font.family: "Helvetica"
         font.bold: true
-        color: "white"
-        style: Text.Raised
-        styleColor: "gray"
         smooth: true
     }
 }

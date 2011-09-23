@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 1.1
 import "functions.js" as Helper
 
 Flipable {
@@ -6,124 +6,47 @@ Flipable {
 
     anchors {
         left: parent.left
-        leftMargin: 0
-        top: parent.top
-        topMargin: 10
-        bottom: thumbnails.top
-        bottomMargin: 10
+        leftMargin: 2
+        verticalCenter: parent.verticalCenter
     }
-    opacity: 0.6
 
-    front: Item {
-        width: 40
+    width: window.width
+    height: window.height
+
+    BorderImage {
+        opacity: 0.6
         anchors {
-            left: parent.left
-            top: parent.top
-            bottom: parent.bottom
+            fill: parent
+            leftMargin: -2
+            rightMargin: -border.right + 4
+            topMargin: -border.top + 2
+            bottomMargin: -border.bottom + 2
         }
 
-        BorderImage {
-            source: "panel/toolbox-bg.sci";
-            width: parent.width + 14;
-            height: parent.height;
-            x: -7
+        border {
+            top: 12
+            bottom: 10
+            right: 12
         }
-
-        Column {
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                margins: 3
-            }
-
-            ToolButton {
-                description: "Adjust contrast"
-                background: "panel/contrast.png"
-                onClicked: flipTo("ContrastWindow")
-            }
-
-            ToolButton {
-                description: "Wave"
-                background: "panel/blur.svg"
-                onClicked: document.waveEffect()
-            }
-
-            ToolButton {
-                description: "Rotate"
-                background: "panel/blur.svg"
-                onClicked: document.rotate(document.selection.x + document.selection.width / 2,
-                                           document.selection.y + document.selection.height / 2,
-                                           3.14 / 180.0 * 30.0)
-            }
-        }
-
-        Column {
-            anchors {
-                left: parent.left
-                right: parent.right
-                bottom: parent.bottom
-                margins: 3
-            }
-
-            ToolButton {
-                description: "Save changes"
-                background: "panel/document-open.svg"
-                onClicked: {
-                    console.debug("tool clicked " + mouse.button)
-                    if (mouse.button == Qt.RightButton) {
-                        Helper.saveAsDocument()
-                    } else if (mouse.button == Qt.LeftButton) {
-                        Helper.saveDocument()
-                    }
-                }
-            }
-
-            ToolButton {
-                description: "Load image"
-                background: "panel/document-save.svg"
-                onClicked: Helper.loadFromFile()
-            }
-        }
+        source: "panel/toolbox-bg.png"
+        smooth: true
     }
 
-    back: Loader {
-        id: windowLoader
-        anchors {
-            verticalCenter: parent.verticalCenter
-            right: parent.left// HACK? take in account that we are flipped
-        }
+    Behavior on width {
+        NumberAnimation { duration: 300 }
     }
 
-    /*
-      Back part of the toolbox
-     */
-
-    property bool flipped: false
-
-    function flipTo(src) {
-        windowLoader.source = src + ".qml"
-        flipped = true
+    Behavior on height {
+        NumberAnimation { duration: 300 }
     }
 
-    transform: Rotation {
-        id: rotation
-        origin.x: 0
-        origin.y: parent.height / 2
-        axis {x: 0; y: 1; z: 0}
-        angle: 0
+    function openWindow(name) {
+        window.source = name + "Window.qml"
     }
 
-    states: State {
-        name: "flipped"
-        when: flipped
-        PropertyChanges {
-            target: rotation
-            angle: 180
-        }
-    }
-
-    transitions: Transition {
-        NumberAnimation { target: rotation; property: "angle"; duration: 300 }
+    Loader {
+        id: window
+        anchors.verticalCenter: parent.verticalCenter
+        source: "ToolsWindow.qml"
     }
 }

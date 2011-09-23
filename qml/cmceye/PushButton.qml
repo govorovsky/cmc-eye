@@ -9,7 +9,7 @@ Item {
     signal clicked()
 
     implicitWidth: label.width + horizontalMargin * 2
-    height: label.height + verticalMargin * 2
+    implicitHeight: label.height + verticalMargin * 2
 
     Rectangle {
         id: rect
@@ -26,6 +26,7 @@ Item {
             anchors.rightMargin: 1
             anchors.bottomMargin: 1
             radius: parent.radius
+            z: -1
         }
 
         MouseArea {
@@ -46,15 +47,12 @@ Item {
             }
         }
 
-        Text {
+        Label {
             id: label
             anchors {
                 horizontalCenter: rect.horizontalCenter
                 verticalCenter: rect.verticalCenter
             }
-
-            style: Text.Raised
-            color: "white"
         }
     }
 
