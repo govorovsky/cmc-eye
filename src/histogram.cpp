@@ -8,15 +8,14 @@
 const double AUTOLEVELS_ZERO = 0.02;
 
 Histogram::Histogram(QDeclarativeItem *parent) :
-    QDeclarativeItem(parent), m_doc(0), m_ch(0)
+    QDeclarativeItem(parent), m_doc(0), m_channel(0)
 {
     setFlag(QGraphicsItem::ItemHasNoContents, false);
-    memset(m_freq, 0, sizeof(m_freq));
 }
 
 Histogram::~Histogram() { }
 
-static int parseChannel(const QString& channel)
+int Histogram::parseChannel(const QString& channel) const
 {
     if (channel == "value")
         return 0;
@@ -26,19 +25,37 @@ static int parseChannel(const QString& channel)
         return 2;
     if (channel == "blue")
         return 3;
-    return -1;
+    return m_channel;
 }
 
 uchar Histogram::getLow(const QString& channel) const
 {
-    int ch = parseChannel(channel);
-    return m_low[(ch == -1) ? m_ch : ch];
+    const uint* freq = m_doc->getHistogram(parseChannel(channel));
+    Q_ASSERT(freq != 0);
+
+    uint max = *std::max_element(freq, freq + Document::NCOLORS);
+    uint zero_level = (uint) max * AUTOLEVELS_ZERO;
+
+    int low = 0;
+    while (low < Document::NCOLORS && freq[low] <= zero_level)
+        ++low;
+
+    return (low != Document::NCOLORS) ? low : 0;
 }
 
 uchar Histogram::getHigh(const QString& channel) const
 {
-    int ch = parseChannel(channel);
-    return m_high[(ch == -1) ? m_ch : ch];
+    const uint* freq = m_doc->getHistogram(parseChannel(channel));
+    Q_ASSERT(freq != 0);
+
+    uint max = *std::max_element(freq, freq + Document::NCOLORS);
+    uint zero_level = (uint) max * AUTOLEVELS_ZERO;
+
+    int high = Document::NCOLORS - 1;
+    while (high >= 0 && freq[high] <= zero_level)
+        --high;
+
+    return (high >= 0) ? high : Document::NCOLORS - 1;
 }
 
 QObject* Histogram::document() const
@@ -52,14 +69,13 @@ void Histogram::setDocument(QObject *document)
         disconnect(this, SLOT(updateFrequencies()));
     }
     m_doc = qobject_cast<Document*> (document);
-    connect(m_doc, SIGNAL(selectionChanged()), SLOT(updateFrequencies()));
-    connect(m_doc, SIGNAL(repaint(QRect)), SLOT(updateFrequencies()));
-    emit updateFrequencies();
+    connect(m_doc, SIGNAL(selectionChanged()), SLOT(repaint()));
+    connect(m_doc, SIGNAL(repaint(QRect)), SLOT(repaint()));
 }
 
 QString Histogram::channel() const
 {
-    switch (m_ch) {
+    switch (m_channel) {
     case 0: return "value";
     case 1: return "red";
     case 2: return "green";
@@ -73,7 +89,7 @@ void Histogram::setChannel(const QString& channel)
     int ch_id;
 
     if (-1 != (ch_id = parseChannel(channel))) {
-        m_ch = ch_id;
+        m_channel = ch_id;
         emit channelChanged();
         update(boundingRect());
     } else {
@@ -81,40 +97,7 @@ void Histogram::setChannel(const QString& channel)
     }
 }
 
-void Histogram::updateFrequencies()
-{
-    QRect selection = m_doc->selection();
-    QImage img = m_doc->getImage();
-
-    memset(m_freq, 0, sizeof(m_freq));
-    for (int line = selection.top(); line <= selection.bottom(); ++line) {
-        const QRgb* data = reinterpret_cast<const QRgb*>(img.constScanLine(line));
-        data += selection.x();
-
-        for (int i = 0; i < selection.width(); ++i, ++data) {
-            ++m_freq[0][qGray(*data)];
-            ++m_freq[1][qRed(*data)];
-            ++m_freq[2][qGreen(*data)];
-            ++m_freq[3][qBlue(*data)];
-        }
-    }
-
-    for (uchar ch = 0; ch < NCHANNELS; ++ch) {
-        m_max[ch] = *std::max_element(m_freq[ch], m_freq[ch] + NCOLORS);
-        uchar low = 0, high = NCOLORS - 1;
-        uint zero_level = (uint) m_max[ch] * AUTOLEVELS_ZERO;
-
-        while (low < high && m_freq[ch][low] <= zero_level)
-            ++low;
-        while (low < high && m_freq[ch][high] <= zero_level)
-            --high;
-
-        m_low[ch] = low;
-        m_high[ch] = high;
-    }
-
-    update(boundingRect());
-}
+void Histogram::repaint() { update(boundingRect()); }
 
 void Histogram::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
@@ -127,15 +110,15 @@ void Histogram::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidg
     const int height = boundingRect().height();
     painter->fillRect(boundingRect(), QBrush(Qt::white, Qt::SolidPattern));
 
-    uint* freq = m_freq[m_ch];
-    uint max_freq = m_max[m_ch];
+    const uint* freq = m_doc->getHistogram(m_channel);
+    uint max_freq = *std::max_element(freq, freq + Document::NCOLORS);
     if (max_freq == 0)
         return;
 
-    double w = (width + .0) / NCOLORS;
+    double w = (width + .0) / Document::NCOLORS;
     QPainterPath path;
 
-    for (int i = 0; i < NCOLORS; ++i) {
+    for (int i = 0; i < Document::NCOLORS; ++i) {
         path.addRect((int) x + (w * i), y + height,
                      (int) x + w, y + -height * (freq[i] + 0.0) / max_freq);
     }

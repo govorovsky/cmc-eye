@@ -24,6 +24,11 @@ public:
         inline QPointF operator()(QPoint point) const { return translate(point); }
     };
 
+    enum {
+        NCHANNELS = 4,
+        NCOLORS = 256
+    };
+
     explicit Document(QObject *parent = 0);
 
     QRect selection() const { return m_selection; }
@@ -38,9 +43,12 @@ public:
     Q_INVOKABLE void adjustContrast(uchar low, uchar high, QString channel);
     Q_INVOKABLE void transform(qreal x, qreal y, qreal angle, qreal scale = 1.0);
     Q_INVOKABLE void waveEffect();
+    Q_INVOKABLE void grayWorld();
 
     void concurrentMap(const PixelMapper& func);
     void translatePixels(const PixelTranslator& func);
+
+    const uint* getHistogram(int channel);
     QImage getImage() const { return m_image; }
 signals:
     void repaint(QRect region);
@@ -50,11 +58,17 @@ signals:
 private:
     Q_DISABLE_COPY(Document)
     void setModified(bool modified);
+    void updateHistogram();
 
     QImage m_image;
     QString m_source;
     bool m_modified;
     QRect m_selection;
+
+    bool m_histogram_valid;
+    uint m_freq[NCHANNELS][NCOLORS];
+private slots:
+    void invalidate_histogram();
 };
 
 #endif // DOCUMENT_H

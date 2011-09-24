@@ -28,20 +28,14 @@ signals:
     void channelChanged();
 
 private:
-    enum {
-        NCHANNELS = 4,
-        NCOLORS = 256
-    };
-
     Document* m_doc;
-    uint m_freq[NCHANNELS][NCOLORS];
-    uint m_max[NCHANNELS];
-    uchar m_high[NCHANNELS], m_low[NCHANNELS];
-    uchar m_ch;
+    uchar m_channel;
+
+    int parseChannel(const QString& channel) const;
 
     Q_DISABLE_COPY(Histogram)
 private slots:
-    void updateFrequencies();
+    void repaint();
 };
 
 #endif // HISTOGRAM_H

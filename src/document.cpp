@@ -4,8 +4,10 @@
 #include <QColor>
 
 Document::Document(QObject *parent)
-    : QObject(parent), m_image(), m_source(), m_modified(false), m_selection(-1, -1, -1, -1)
+    : QObject(parent), m_image(), m_source(), m_modified(false),
+      m_selection(-1, -1, -1, -1), m_histogram_valid(false)
 {
+    connect(this, SIGNAL(repaint(QRect)), SLOT(invalidate_histogram()));
 }
 
 void Document::setModified(bool modified)
@@ -50,6 +52,40 @@ void Document::setSelection(QRect selection)
                 selection.intersected(m_image.rect()) :
                 m_image.rect();
     emit selectionChanged();
+}
+
+/*
+  Histogram
+ */
+
+void Document::invalidate_histogram()
+{
+    m_histogram_valid = false;
+}
+
+void Document::updateHistogram()
+{
+    memset(m_freq, 0, sizeof(m_freq));
+    for (int line = m_selection.top(); line <= m_selection.bottom(); ++line) {
+        const QRgb* data = reinterpret_cast<const QRgb*>(m_image.constScanLine(line));
+        data += m_selection.x();
+
+        for (int i = 0; i < m_selection.width(); ++i, ++data) {
+            ++m_freq[0][qGray(*data)];
+            ++m_freq[1][qRed(*data)];
+            ++m_freq[2][qGreen(*data)];
+            ++m_freq[3][qBlue(*data)];
+        }
+    }
+}
+
+const uint* Document::getHistogram(int channel)
+{
+    if (channel > NCHANNELS)
+        return 0;
+    if (!m_histogram_valid)
+        updateHistogram();
+    return m_freq[channel];
 }
 
 /*
@@ -252,4 +288,14 @@ void Document::transform(qreal x, qreal y, qreal angle, qreal scale)
 {
     qDebug() << "transform(" << x << "," << y << "," << angle << "," << scale << ")";
     translatePixels(Rotation(x, y, angle, scale));
+}
+
+/*
+  Gray world
+ */
+
+void Document::grayWorld()
+{
+    qDebug() << "grayWorld()";
+
 }
