@@ -81,7 +81,7 @@ void Document::updateHistogram()
 
 const uint* Document::getHistogram(int channel)
 {
-    if (channel > NCHANNELS)
+    if (channel >= NCHANNELS)
         return 0;
     if (!m_histogram_valid)
         updateHistogram();
@@ -294,8 +294,39 @@ void Document::transform(qreal x, qreal y, qreal angle, qreal scale)
   Gray world
  */
 
+static int colorBound(int color)
+{
+    if (color < 0)
+        return 0;
+    if (color >= Document::NCOLORS)
+        return Document::NCOLORS - 1;
+    return color;
+}
+
+struct GrayWorld: Document::PixelMapper {
+    const double* m_avg;
+    explicit GrayWorld(const double* avg): m_avg(avg) { }
+
+    QRgb map(QRgb pixel, QPoint) const {
+        return qRgb(colorBound((int) qRed(pixel) * (m_avg[0] / m_avg[1])),
+                    colorBound((int) qGreen(pixel) * (m_avg[0] / m_avg[2])),
+                    colorBound((int) qBlue(pixel) * (m_avg[0] / m_avg[3])));
+    }
+};
+
 void Document::grayWorld()
 {
-    qDebug() << "grayWorld()";
+    qDebug() << "Grayworld()";
+    const uint N = m_selection.width() * m_selection.height();
 
+    double avg[4];
+    for (int i = 1; i <= 3; ++i) {
+        const uint* freq = getHistogram(i);
+        avg[i] = 0;
+        for (int color = 0; color < NCOLORS; ++color)
+            avg[i] += (double) freq[color] / N * color;
+    }
+    avg[0] = (avg[1] + avg[2] + avg[3]) / 3;
+
+    concurrentMap(GrayWorld(avg));
 }

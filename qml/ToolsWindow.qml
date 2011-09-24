@@ -12,6 +12,12 @@ Column {
     }
 
     ToolButton {
+        description: "Auto white (Grayworld)"
+        background: "img/blur.svg"
+        onClicked: document.grayWorld()
+    }
+
+    ToolButton {
         description: "Wave effect"
         background: "img/blur.svg"
         onClicked: document.waveEffect()
