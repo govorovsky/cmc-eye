@@ -100,7 +100,9 @@ class ConcurrentMapLine {
 public:
     ConcurrentMapLine(QImage& image, QPoint position, int length, const Document::PixelMapper& mapper)
         : m_image(image), m_position(position), m_length(length), m_mapper(mapper) { }
-    const ConcurrentMapLine& operator =(const ConcurrentMapLine& other) { return other; }
+    ConcurrentMapLine operator =(const ConcurrentMapLine& other) {
+        return ConcurrentMapLine(other.m_image, other.m_position, other.m_length, other.m_mapper);
+    }
     void map() {
         QRgb* data = reinterpret_cast <QRgb*> (m_image.scanLine(m_position.y()));
         data += m_position.x();
@@ -329,4 +331,163 @@ void Document::grayWorld()
     avg[0] = (avg[1] + avg[2] + avg[3]) / 3;
 
     concurrentMap(GrayWorld(avg));
+}
+
+/*
+  Filtering
+ */
+
+class ConcurrentLinearFilter {
+    const QVector<qreal> m_filter;
+    const QVector<QRgb>  m_head;
+    const QVector<QRgb>  m_tail;
+    const int            m_length;
+    const int            m_gap;
+    uchar* const         m_data;
+
+    qreal err;
+    int n;
+
+    void step(QVector<QRgb> &prev, int &head, QRgb &center, const QVector<QRgb> &next, int tail)
+    {
+        qreal r = 0, g = 0, b = 0;
+        for (int i = 0; i < n; ++i) {
+            r += (qRed(prev[head]) + qRed(next[tail])) * m_filter[i];
+            g += (qGreen(prev[head]) + qGreen(next[tail])) * m_filter[i];
+            b += (qBlue(prev[head]) + qBlue(next[tail])) * m_filter[i];
+
+            ++head; if (head == n) head = 0;
+            --tail; if (tail < 0) tail = n - 1;
+        }
+        r += qRed(center) * m_filter[n];
+        g += qGreen(center) * m_filter[n];
+        b += qBlue(center) * m_filter[n];
+
+        prev[head] = center;
+        ++head; if (head == n) head = 0;
+
+        center = qRgb((int) (r / err), (int) (g / err), (int) (b / err));
+    }
+
+    void process() {
+        if (m_length < (n + 1))
+            return;
+
+        QVector<QRgb> prev(m_head);
+        QVector<QRgb> next(n);
+        int head = 0, tail = n - 2;
+
+        uchar* tail_data = m_data + m_gap;
+        for (int i = 0; i < n - 1; ++i, tail_data += m_gap)
+            next[i] = *reinterpret_cast <QRgb*> (tail_data);
+
+        uchar* data = m_data;
+        for (int i = 0; i < (m_length - n); ++i, data += m_gap) {
+            ++tail; if (tail == n) tail = 0;
+            next[tail] = *reinterpret_cast <QRgb*> (tail_data);
+            tail_data += m_gap;
+
+            step(prev, head, *reinterpret_cast <QRgb*> (data), next, tail);
+        }
+
+        for (int i = 0; i < n; ++i, data += m_gap) {
+            ++tail; if (tail == n) tail = 0;
+            next[tail] = m_tail[i];
+
+            step(prev, head, *reinterpret_cast <QRgb*> (data), next, tail);
+        }
+    }
+
+public:
+    ConcurrentLinearFilter(QVector<qreal>   filter, /* half filter */
+                           QVector<QRgb>    head,   /* pixels before data (gray) */
+                           QVector<QRgb>    tail,   /* pixels after data (gray) */
+                           int              length, /* length of data to process */
+                           int              gap,    /* bytes beetween pixels*/
+                           uchar*           data)
+        : m_filter(filter), m_head(head), m_tail(tail),
+          m_length(length), m_gap(gap), m_data(data)
+    {
+        n = filter.size() - 1;
+        Q_ASSERT(m_head.size() == n);
+        Q_ASSERT(m_tail.size() == n);
+
+        err = 0;
+        for (int i = 0; i < n; ++i)
+            err += filter[i];
+        err = 2*err + filter[n];
+    }
+
+    ConcurrentLinearFilter operator= (const ConcurrentLinearFilter& other) const {
+        return ConcurrentLinearFilter(other.m_filter, other.m_head, other.m_tail, other.m_length, other.m_gap, other.m_data);
+    }
+
+    static void process(ConcurrentLinearFilter obj) { obj.process(); }
+};
+
+void Document::separableFilter(const QVector<qreal> &filter)
+{
+    if (std::min(m_selection.height(), m_selection.width()) < filter.size()) {
+        qWarning() << "Too large filter!";
+    }
+    if (filter.size() < 2) {
+        qWarning() << "Filter size must be at least 2";
+    }
+    qDebug() << "separableFilter(" << filter << ")";
+
+    int n = filter.size() - 1;
+
+    QList<ConcurrentLinearFilter> jobs;
+    jobs.reserve(m_selection.height());
+    for (int line = m_selection.top(); line <= m_selection.bottom(); ++line) {
+        QVector<QRgb> head(n);
+        for (int i = 0; i < n; ++i)
+            head[i] = m_image.pixel(abs(m_selection.x() - n + i), line);
+
+        QVector<QRgb> tail(n);
+        for (int i = 0; i < n; ++i) {
+            int x = m_selection.right() + 1 + i;
+            if (x >= m_image.width())
+                x = 2 * m_image.width() - x - 1;
+            tail[i] = m_image.pixel(x, line);
+        }
+
+        jobs.append(ConcurrentLinearFilter(filter, head, tail, m_selection.width(), sizeof(QRgb),
+                                           m_image.scanLine(line) + m_selection.left() * sizeof(QRgb)));
+    }
+    QtConcurrent::blockingMap(jobs, ConcurrentLinearFilter::process);
+
+    jobs.clear();
+    jobs.reserve(m_selection.width());
+    for (int column = m_selection.left(); column <= m_selection.right(); ++column) {
+        QVector<QRgb> head(n);
+        for (int i = 0; i < n; ++i)
+            head[i] = m_image.pixel(column, abs(m_selection.top() - n + i));
+
+        QVector<QRgb> tail(n);
+        for (int i = 0; i < n; ++i) {
+            int y = m_selection.bottom() + 1 + i;
+            if (y >= m_image.height())
+                y = 2 * m_image.height() - y - 1;
+            tail[i] = m_image.pixel(column, y);
+        }
+
+        jobs.append(ConcurrentLinearFilter(filter, head, tail, m_selection.height(), m_image.bytesPerLine(),
+                                           m_image.scanLine(m_selection.top()) + column * sizeof(QRgb)));
+    }
+    QtConcurrent::blockingMap(jobs, ConcurrentLinearFilter::process);
+
+    setModified(true);
+    emit repaint(m_selection);
+}
+
+void Document::gaussBlur(qreal sigma)
+{
+    int n = ceil(sigma * 3 - 0.001);
+
+    QVector<qreal> filter(n);
+    for (int x = n - 1, i = 0; i < n; --x,++i)
+        filter[i] = exp(-0.5 * x / sigma * x / sigma) / (sqrt(2 * M_PI) * sigma);
+
+    separableFilter(filter);
 }

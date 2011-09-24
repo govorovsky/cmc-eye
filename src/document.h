@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QImage>
+#include <QVector>
 
 class Document : public QObject
 {
@@ -42,11 +43,13 @@ public:
     Q_INVOKABLE bool save(const QString& filename);
     Q_INVOKABLE void adjustContrast(uchar low, uchar high, QString channel);
     Q_INVOKABLE void transform(qreal x, qreal y, qreal angle, qreal scale = 1.0);
+    Q_INVOKABLE void gaussBlur(qreal sigma = 0.5);
     Q_INVOKABLE void waveEffect();
     Q_INVOKABLE void grayWorld();
 
     void concurrentMap(const PixelMapper& func);
     void translatePixels(const PixelTranslator& func);
+    void separableFilter(const QVector<qreal> &filter);
 
     const uint* getHistogram(int channel);
     QImage getImage() const { return m_image; }

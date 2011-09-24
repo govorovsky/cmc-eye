@@ -12,6 +12,12 @@ Column {
     }
 
     ToolButton {
+        description: "Gauss blur"
+        background: "img/blur.svg"
+        onClicked: document.gaussBlur(30.0)
+    }
+
+    ToolButton {
         description: "Auto white (Grayworld)"
         background: "img/blur.svg"
         onClicked: document.grayWorld()
