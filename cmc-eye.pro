@@ -20,4 +20,8 @@ OTHER_FILES += \
     qml/RotationWindow.qml \
     qml/Label.qml \
     qml/ToolsWindow.qml \
+    qml/WindowButtons.qml \
+    qml/Input.qml \
+    qml/Canvas.qml \
+    qml/Main.qml \
     readme.txt
