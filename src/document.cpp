@@ -481,13 +481,29 @@ void Document::separableFilter(const QVector<qreal> &filter)
     emit repaint(m_selection);
 }
 
-void Document::gaussBlur(qreal sigma)
+static QVector<qreal> gaussKernel(qreal sigma)
 {
     int n = ceil(sigma * 3 - 0.001);
 
-    QVector<qreal> filter(n);
+    QVector<qreal> result(n);
     for (int x = n - 1, i = 0; i < n; --x,++i)
-        filter[i] = exp(-0.5 * x / sigma * x / sigma) / (sqrt(2 * M_PI) * sigma);
+        result[i] = exp(-0.5 * x / sigma * x / sigma) / (sqrt(2 * M_PI) * sigma);
 
-    separableFilter(filter);
+    return result;
+}
+
+void Document::gaussBlur(qreal sigma)
+{
+    separableFilter(gaussKernel(sigma));
+}
+
+void Document::unsharp(qreal sharpness, qreal sigma)
+{
+    QVector<qreal> kernel = gaussKernel(sigma);
+    int n = kernel.size() - 1;
+    for (int i = 0; i < n; ++i)
+        kernel[i] *= -sharpness;
+    kernel[n] = 1 + sharpness * (1 - kernel[n]);
+
+    separableFilter(kernel);
 }
