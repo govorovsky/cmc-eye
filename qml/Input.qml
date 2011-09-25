@@ -7,7 +7,7 @@ Rectangle {
 
     color: "transparent"
     border.width: 1
-    border.color: "gray"
+    border.color: input.acceptableInput ? "gray" : "red"
 
     TextInput {
         id: input
