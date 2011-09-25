@@ -2,6 +2,7 @@
 
 #include <QtCore>
 #include <QColor>
+#include <algorithm>
 
 Document::Document(QObject *parent)
     : QObject(parent), m_image(), m_source(), m_modified(false),
@@ -103,14 +104,14 @@ public:
     ConcurrentMapLine operator =(const ConcurrentMapLine& other) {
         return ConcurrentMapLine(other.m_image, other.m_position, other.m_length, other.m_mapper);
     }
-    void map() {
+    void map() const {
         QRgb* data = reinterpret_cast <QRgb*> (m_image.scanLine(m_position.y()));
         data += m_position.x();
         QPoint cur = m_position;
         for (int i = 0; i < m_length; ++i, ++data, ++cur.rx())
             *data = m_mapper(*data, cur);
     }
-    static void map(ConcurrentMapLine& line) { line.map(); }
+    static void map(const ConcurrentMapLine& line) { line.map(); }
 };
 
 void Document::concurrentMap(const PixelMapper& func)
@@ -348,7 +349,7 @@ class ConcurrentLinearFilter {
     qreal err;
     int n;
 
-    void step(QVector<QRgb> &prev, int &head, QRgb &center, const QVector<QRgb> &next, int tail)
+    void step(QVector<QRgb> &prev, int &head, QRgb &center, const QVector<QRgb> &next, int tail) const
     {
         qreal r = 0, g = 0, b = 0;
         for (int i = 0; i < n; ++i) {
@@ -371,7 +372,7 @@ class ConcurrentLinearFilter {
                       colorBound((int) (b / err)));
     }
 
-    void process() {
+    void process() const {
         if (m_length < (n + 1))
             return;
 
@@ -424,7 +425,7 @@ public:
         return ConcurrentLinearFilter(other.m_filter, other.m_head, other.m_tail, other.m_length, other.m_gap, other.m_data);
     }
 
-    static void process(ConcurrentLinearFilter obj) { obj.process(); }
+    static void process(const ConcurrentLinearFilter& obj) { obj.process(); }
 };
 
 void Document::separableFilter(const QVector<qreal> &filter)
@@ -508,4 +509,123 @@ void Document::unsharp(qreal sharpness, qreal sigma)
     kernel[n] = 1 + sharpness * (1 - kernel[n]);
 
     separableFilter(kernel);
+}
+
+/*
+  Median filtering
+ */
+
+class MedianWindow
+{
+    const int n, size, middle;
+    uchar* const window;
+    uchar** const order;
+    uchar* const end;
+
+    uchar* head;
+
+    static bool ptr_cmp(uchar *a, uchar *b) { return *a < *b; }
+public:
+    explicit MedianWindow(uint radius)
+        : n(radius * 2 + 1), size(n * n), middle(size / 2),
+          window(new uchar[n*n]), order(new uchar*[n*n]),
+          end(window + (n*n)), head(window)
+    {
+        std::fill(window, end, 0u);
+        for (int i = 0; i < size; ++i)
+            order[i] = window + i;
+    }
+
+    ~MedianWindow() {
+        delete[] order;
+        delete[] window;
+    }
+
+    void move(const uchar elem) {
+        *head++ = elem;
+        if (head == end) head = window;
+    }
+
+    uchar median() const {
+        std::nth_element(order, order + middle, order + size, ptr_cmp);
+        return *order[middle];
+    }
+};
+
+
+class MedianFilter {
+    const int m_radius;
+    const QImage& m_orig;
+    QImage& m_image;
+    const QPoint m_start;
+    const int m_height;
+    int image_width, image_height;
+
+    inline const QRgb* getLine(int y) const {
+        y = abs(y);
+        const uchar* result;
+        if (y < image_height)
+            result = m_orig.scanLine(y);
+        else
+            result = m_orig.scanLine(2 * image_height - y - 1);
+        return reinterpret_cast<const QRgb*> (result);
+    }
+
+    void fillLine(int y, MedianWindow& window) const {
+        const QRgb *line = getLine(y);
+        for (int i = -m_radius; i <= m_radius; ++i) {
+            int x = abs(m_start.x() + i);
+            if (x > image_width)
+                x = 2 * image_width - x - 1;
+            window.move(qGray(line[x]));
+        }
+    }
+
+public:
+    void process() const {
+        MedianWindow window(m_radius);
+
+        /* prefill all lines except last */
+        for (int y = -m_radius; y < m_radius; ++y)
+            fillLine(m_start.y() + y, window);
+
+        int x = m_start.x();
+        int y = m_start.y();
+
+        for (int i = 0; i < m_height; ++i, ++y) {
+            fillLine(y + m_radius, window);
+
+            /* change value */
+            QColor color(m_orig.pixel(x, y));
+            int h, s, v;
+            color.getHsv(&h, &s, &v);
+            color.setHsv(h, s, window.median());
+            m_image.setPixel(x, y, color.rgb());
+        }
+    }
+
+    MedianFilter(int radius, const QImage& orig, QImage& image, const QPoint& start, int height):
+        m_radius(radius), m_orig(orig), m_image(image), m_start(start), m_height(height)
+    {
+        image_width = m_image.width();
+        image_height = m_image.height();
+    }
+    MedianFilter operator =(const MedianFilter& other) {
+        return MedianFilter(other.m_radius, other.m_orig, other.m_image, other.m_start, other.m_height);
+    }
+    static void process(const MedianFilter& filter) { filter.process(); }
+};
+
+void Document::medianFilter(uint radius)
+{
+    QImage orig = m_image.copy();
+
+    QList<MedianFilter> jobs;
+    for (int x = m_selection.x(); x <= m_selection.right(); ++x)
+        jobs.append(MedianFilter(radius, orig, m_image, QPoint(x, m_selection.top()), m_selection.height()));
+
+    QtConcurrent::blockingMap(jobs, MedianFilter::process);
+
+    setModified(true);
+    emit repaint(m_selection);
 }

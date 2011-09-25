@@ -75,7 +75,7 @@ Column {
 
             input {
                 maximumLength: 5
-                text: { 0.5 }
+                text: { 0.8 }
                 validator: DoubleValidator { bottom: 0.0; top: 1.0; }
             }
         }
@@ -84,15 +84,80 @@ Column {
 
     WindowButtons {
         leftLabel: "Blur"
-        onLeftClicked: if (sigma.input.acceptableInput) document.gaussBlur(sigma.input.text)
+        onLeftClicked: if (sigma.input.acceptableInput)
+                           document.gaussBlur(sigma.input.text)
         rightLabel: "Unsharp"
         onRightClicked: if (sharpness.input.acceptableInput && sigma.input.acceptableInput)
                             document.unsharp(sharpness.input.text, sigma.input.text)
     }
 
-    PushButton {
-        label: "Back"
+    Label {
         anchors.horizontalCenter: parent.horizontalCenter
-        onClicked: toolbox.openHome()
+        font.family: "Helvetica"
+        font.bold: true
+        text: "Median filter"
     }
+
+    Item {
+        anchors {
+            left: parent.left
+            right: parent.right
+            leftMargin: 3
+            rightMargin: 3
+        }
+        height: childrenRect.height
+
+        Label {
+            id: labelRadius
+            anchors {
+                left: parent.left
+                verticalCenter: m_radius.verticalCenter
+            }
+            text: "Radius: "
+        }
+
+        Input {
+            id: m_radius
+            anchors {
+                left: labelRadius.right
+                leftMargin: 5
+            }
+            width: 20
+            height: labelRadius.height + 4
+
+            input {
+                maximumLength: 3
+                text: { 1 }
+                validator: IntValidator {
+                    bottom: 1
+                    top: Math.min(Math.min(document.selection.width, document.selection.height) / 2, 10)
+                }
+            }
+        }
+
+        PushButton {
+            label: "Apply"
+            anchors {
+                left: m_radius.right
+                leftMargin: 5
+                right: parent.right
+            }
+            onClicked: if (m_radius.input.acceptableInput)
+                           document.medianFilter(m_radius.input.text)
+        }
+    }
+
+    Label {
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.family: "Helvetica"
+        font.bold: true
+        text: "Custom filter"
+    }
+
+    WindowButtons {
+        leftLabel: "Back"
+        onLeftClicked: toolbox.openHome()
+        rightLabel: "Edit..."
+    }
+
 }
