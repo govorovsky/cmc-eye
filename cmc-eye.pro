@@ -25,4 +25,6 @@ OTHER_FILES += \
     qml/Canvas.qml \
     qml/Main.qml \
     qml/FilterWindow.qml \
+    qml/CustomKernelWindow.qml \
+    qml/kernel.js \
     readme.txt

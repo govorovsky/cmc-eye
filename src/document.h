@@ -46,6 +46,7 @@ public:
     Q_INVOKABLE void gaussBlur(qreal sigma = 0.5);
     Q_INVOKABLE void unsharp(qreal sharpness = 0.5, qreal sigma = 0.5);
     Q_INVOKABLE void medianFilter(uint radius = 3);
+    Q_INVOKABLE void customFilter(uint size, const QString& kernelStr);
     Q_INVOKABLE void waveEffect();
     Q_INVOKABLE void grayWorld();
 

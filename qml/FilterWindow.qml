@@ -158,6 +158,7 @@ Column {
         leftLabel: "Back"
         onLeftClicked: toolbox.openHome()
         rightLabel: "Edit..."
+        onRightClicked: toolbox.openWindow("CustomKernel")
     }
 
 }

@@ -629,3 +629,59 @@ void Document::medianFilter(uint radius)
     setModified(true);
     emit repaint(m_selection);
 }
+
+/*
+  Custom kernel (very bad quality code, yes)
+ */
+
+static void applyKernel(QImage& image,  int cx, int cy, const QVector < QVector <double> > kernel, double corr)
+{
+    int n = kernel.size();
+    int m = n / 2;
+
+    double r = 0.0, g = 0.0, b = 0.0;
+    for (int i = 0; i < kernel.size(); ++i) {
+        for (int j = 0; j < kernel.size(); ++j) {
+            int x = abs(cx - m + j);
+            int y = abs(cy - m + i);
+            if (x >= image.width())
+                x = 2 * image.width() - x - 1;
+            if (y >= image.height())
+                y = 2 * image.height() - y - 1;
+
+            QRgb rgb = image.pixel(x, y);
+            r += qRed(rgb) * kernel[n - i - 1][j];
+            g += qGreen(rgb) * kernel[n - i - 1][j];
+            b += qBlue(rgb) * kernel[n - i - 1][j];
+        }
+    }
+
+    image.setPixel(cx, cy, qRgb(colorBound((int) r / corr),
+                                colorBound((int) g / corr),
+                                colorBound((int) b / corr)));
+}
+
+void Document::customFilter(uint size, const QString &kernelStr)
+{
+    QStringList numbers = kernelStr.split(" ", QString::SkipEmptyParts);
+    Q_ASSERT(numbers.size() == (size * size));
+
+    QVector< QVector<double> > kernel(size);
+    double sum = 0.0;
+    for (uint i = 0; i < size; ++i) {
+        for (uint j = 0; j < size; ++j) {
+            kernel[i].append(numbers[i*size + j].toDouble());
+            sum += kernel[i][j];
+        }
+    }
+
+    qDebug() << "customFilter(" << size << ", " << kernel << ")";
+
+    for (int y = m_selection.top(); y <= m_selection.bottom(); ++y) {
+        for (int x = m_selection.left(); x <= m_selection.right(); ++x)
+            applyKernel(m_image, x, y, kernel, sum);
+    }
+
+    setModified(true);
+    emit repaint(m_selection);
+}
