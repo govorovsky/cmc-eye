@@ -1,10 +1,13 @@
 import QtQuick 1.0
 import "functions.js" as Helper
 
-Rectangle {
+Image {
     id: main
     width: 600
     height: 600
+
+    source: "img/bg.png"
+    fillMode: Image.Tile
 
     Canvas { id: canvas }
     Toolbox { id: toolbox }
