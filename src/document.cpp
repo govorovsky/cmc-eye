@@ -366,7 +366,9 @@ class ConcurrentLinearFilter {
         prev[head] = center;
         ++head; if (head == n) head = 0;
 
-        center = qRgb((int) (r / err), (int) (g / err), (int) (b / err));
+        center = qRgb(colorBound((int) (r / err)),
+                      colorBound((int) (g / err)),
+                      colorBound((int) (b / err)));
     }
 
     void process() {

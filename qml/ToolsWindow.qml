@@ -12,20 +12,20 @@ Column {
     }
 
     ToolButton {
-        description: "Gauss blur"
+        description: "Filter"
         background: "img/blur.svg"
-        onClicked: document.gaussBlur(30.0)
+        onClicked: toolbox.openWindow("Filter")
     }
 
     ToolButton {
         description: "Auto white (Grayworld)"
-        background: "img/blur.svg"
+        background: "img/grayworld.svg"
         onClicked: document.grayWorld()
     }
 
     ToolButton {
         description: "Wave effect"
-        background: "img/blur.svg"
+        background: "img/wave.svg"
         onClicked: document.waveEffect()
     }
 

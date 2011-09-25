@@ -24,4 +24,5 @@ OTHER_FILES += \
     qml/Input.qml \
     qml/Canvas.qml \
     qml/Main.qml \
+    qml/FilterWindow.qml \
     readme.txt
