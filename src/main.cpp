@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QtDeclarative>
+#include <QDir>
 
 #include "qmlapplicationviewer.h"
 #include "document.h"
@@ -24,7 +25,12 @@ int main(int argc, char *argv[])
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.showExpanded();
-    viewer.setMainQmlFile(QLatin1String("qml/Main.qml"));
+
+    // HACK
+    QDir binary(argv[0]);
+    binary.makeAbsolute();
+    binary.cdUp(); // skip binary name
+    viewer.setMainQmlFile(binary.path() + "/../qml/Main.qml");
 
     return app.exec();
 }
