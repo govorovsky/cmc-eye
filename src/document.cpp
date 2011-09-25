@@ -1,8 +1,10 @@
 #include "document.h"
 
 #include <QtCore>
-#include <QColor>
 #include <algorithm>
+
+static int colorBound(int color);
+static QRgb setGray(const QRgb& color, int Y);
 
 Document::Document(QObject *parent)
     : QObject(parent), m_image(), m_source(), m_modified(false),
@@ -171,11 +173,7 @@ struct ValueCorrector: Document::PixelMapper {
     const ChannelCorrector& m_corrector;
     explicit ValueCorrector(const ChannelCorrector& corrector): m_corrector(corrector) { }
     QRgb map(QRgb pixel, QPoint) const {
-        QColor color(pixel);
-        int h, s, v;
-        color.getHsv(&h, &s, &v);
-        color.setHsv(h, s, m_corrector(v));
-        return color.rgb();
+        return setGray(pixel, m_corrector(qGray(pixel)));
     }
 };
 
@@ -304,6 +302,19 @@ static int colorBound(int color)
     if (color >= Document::NCOLORS)
         return Document::NCOLORS - 1;
     return color;
+}
+
+static QRgb setGray(const QRgb& color, int Y)
+{
+    const int U = ( ( -38 * qRed(color) -  74 * qGreen(color) + 112 * qBlue(color) + 128) >> 8) + 128;
+    const int V = ( ( 112 * qRed(color) -  94 * qGreen(color) -  18 * qBlue(color) + 128) >> 8) + 128;
+    const int C = Y - 16;
+    const int D = U - 128;
+    const int E = V - 128;
+
+    return qRgb(colorBound(( 298 * C           + 409 * E + 128) >> 8),
+                colorBound(( 298 * C - 100 * D - 208 * E + 128) >> 8),
+                colorBound(( 298 * C + 516 * D           + 128) >> 8));
 }
 
 struct GrayWorld: Document::PixelMapper {
@@ -594,13 +605,7 @@ public:
 
         for (int i = 0; i < m_height; ++i, ++y) {
             fillLine(y + m_radius, window);
-
-            /* change value */
-            QColor color(m_orig.pixel(x, y));
-            int h, s, v;
-            color.getHsv(&h, &s, &v);
-            color.setHsv(h, s, window.median());
-            m_image.setPixel(x, y, color.rgb());
+            m_image.setPixel(x, y, setGray(m_orig.pixel(x, y), window.median()));
         }
     }
 
