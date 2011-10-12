@@ -48,6 +48,7 @@ function autoLevels(histogram) {
     ["red", "green", "blue"].forEach(function(channel) {
         var low = histogram.getLow(channel);
         var high = histogram.getHigh(channel)
-        document.adjustContrast(low, high, channel);
+        if (high - low > 10)
+            document.adjustContrast(low, high, channel);
     });
 }

@@ -137,6 +137,8 @@ class LinearCorrector: public ChannelCorrector {
 public:
     LinearCorrector(uchar low, uchar high): m_low (low), m_high(high) { }
     uchar correct(uchar value) const {
+        Q_ASSERT(m_low < m_high);
+
         if (value <= m_low)
             return 0;
         if (value >= m_high)
